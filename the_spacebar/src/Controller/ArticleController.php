@@ -22,4 +22,6 @@ class ArticleController
     public function show($slug){
         return new Response(sprintf('a new article : "%s"',$slug));
     }
+
+    //sprintf : concatenation de la chaîne de S
 }
