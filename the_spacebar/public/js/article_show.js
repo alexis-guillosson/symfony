@@ -10,4 +10,4 @@ $(document).ready(function() {
             $('.js-like-article-count').html(data.hearts);
         })
     });
-}); 
+});
