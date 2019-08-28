@@ -2,14 +2,21 @@
 
 namespace App\Entity;
 
+use App\Repository\CommentRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
  */
 class Article
 {
+    use TimestampableEntity;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -54,14 +61,21 @@ class Article
     private $imageFilename;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="article", fetch="EXTRA_LAZY")
+     * @ORM\OrderBy({"createdAt" = "DESC"})
      */
-    private $createdAt;
+    private $comments;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="articles")
      */
-    private $updatedAt;
+    private $tags;
+
+    public function __construct()
+    {
+        $this->comments = new ArrayCollection();
+        $this->tags = new ArrayCollection();
+    }
 
     public function getId()
     {
@@ -163,26 +177,69 @@ class Article
         return 'images/'.$this->getImageFilename();
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    /**
+     * @return Collection|Comment[]
+     */
+    public function getComments(): Collection
     {
-        return $this->createdAt;
+        return $this->comments;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): self
+    /**
+     * @return Collection|Comment[]
+     */
+    public function getNonDeletedComments(): Collection
     {
-        $this->createdAt = $createdAt;
+        $criteria = CommentRepository::createNonDeletedCriteria();
+
+        return $this->comments->matching($criteria);
+    }
+
+    public function addComment(Comment $comment): self
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments[] = $comment;
+            $comment->setArticle($this);
+        }
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function removeComment(Comment $comment): self
     {
-        return $this->updatedAt;
+        if ($this->comments->contains($comment)) {
+            $this->comments->removeElement($comment);
+            // set the owning side to null (unless already changed)
+            if ($comment->getArticle() === $this) {
+                $comment->setArticle(null);
+            }
+        }
+
+        return $this;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
+    /**
+     * @return Collection|Tag[]
+     */
+    public function getTags(): Collection
     {
-        $this->updatedAt = $updatedAt;
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
+        }
 
         return $this;
     }
