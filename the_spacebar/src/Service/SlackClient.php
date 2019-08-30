@@ -8,7 +8,7 @@ use App\Helper\LoggerTrait;
 use Nexy\Slack\Client;
 use Psr\Log\LoggerInterface;
 
-class SlackCLient{
+class SlackClient{
     use LoggerTrait;
 
     /**
